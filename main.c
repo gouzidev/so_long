@@ -34,22 +34,7 @@ typedef struct s_mlx
  * often used in software to identify the key regardless of hardware.
  * 🚨 MinilibX mac uses keycodes 🚨
  */
-int handle_input(int keysym, t_mlx *mlx)
-{
-    // Check the #defines
-    // find / -name keysym.h 2>/dev/null
-    // find / -name keysymdef.h 2>/dev/null
-    if (keysym == XK_Escape)
-    {
-        printf("The %d key (ESC) has been pressed\n\n", keysym);
-        mlx_destroy_window(mlx->mlx, mlx->win);
-        mlx_destroy_display(mlx->mlx);
-        free(mlx->mlx);
-        exit(1);
-    }
-    printf("The %d key has been pressed\n\n", keysym);
-    return (0);
-}
+
 typedef struct s_img
 {
     void *img;
@@ -58,13 +43,56 @@ typedef struct s_img
     int line_length;
     int endian;
 } t_img;
+typedef struct s_player
+{
+    int x;
+    int y;
+    int score;
+}  t_player;
 
 typedef struct s_data
 {
     t_img img;
     t_mlx mlx;
+    t_player player;
+    char *map[];
 } t_data;
 
+
+
+int handle_input(int keysym, t_data *data)
+{
+    
+    // Check the #defines
+    // find / -name keysym.h 2>/dev/null
+    // find / -name keysymdef.h 2>/dev/null
+    if (keysym == XK_Escape)
+    {
+        printf("The %d key (ESC) has been pressed\n\n", keysym);
+        mlx_destroy_window(data->mlx.mlx, data->mlx.mlx);
+        mlx_destroy_display(data->mlx.mlx);
+        free(data->mlx.mlx);
+        exit(1);
+    }
+    if (keysym == XK_Up)
+    {
+        data->player.y -= 1;
+    }
+    if (keysym == XK_Down)
+    {
+        data->player.y += 1;
+    }
+    if (keysym == XK_Right)
+    {
+        data->player.y -= 1;
+
+    }
+    if (keysym == XK_Left)
+    {
+    }
+    printf("The %d key has been pressed\n\n", keysym);
+    return (0);
+}
 void my_mlx_pixel_put(t_img *img, int x, int y, int color)
 {
     char *dst;
@@ -112,14 +140,15 @@ int draw_squares(t_data *data)
 // C collectible,
 // E map exit,
 // P player
-int draw_map(t_mlx mlx)
+int draw_map(t_data *data)
 {
     char *map1[] = {
     "1111111111111",
-    "1C010T000T0C1",
+    "1C010000000C1",
     "1000011111001",
-    "1P0011ET00001",
-    "1111111111111"};
+    "1P0011E000001",
+    "1111111111111"
+    };
 
     int img_w;
     int img_h;
@@ -129,11 +158,25 @@ int draw_map(t_mlx mlx)
     int j;
     void *wall_img;
     void *floor_img;
+    void *coin_img;
+    void *exit_img;
+    void *player_img;
+    void *demon0_img;
+    void *p1_img;
+    void *mlx;
+    void *win;
+    t_img img;
 
+    img = data->img;
+    mlx = data->mlx.mlx;
+    win = data->mlx.win;
     i = 0;
     j = 0;
-    wall_img = mlx_xpm_file_to_image(mlx.mlx, "./assets/world/map/wall.xpm", &img_w, &img_h);
-    floor_img = mlx_xpm_file_to_image(mlx.mlx, "./assets/world/map/floor.xpm", &img_w, &img_h);
+    wall_img = mlx_xpm_file_to_image(mlx, "./wall.xpm", &img_w, &img_h);
+    floor_img = mlx_xpm_file_to_image(mlx, "./floor.xpm", &img_w, &img_h);
+    exit_img = mlx_xpm_file_to_image(mlx, "./exit.xpm", &img_w, &img_h);
+    p1_img = mlx_xpm_file_to_image(mlx, "./p1.xpm", &img_w, &img_h);
+    coin_img = mlx_xpm_file_to_image(mlx, "./coin.xpm", &img_w, &img_h);
     map_w = strlen(map1[0]);
     map_h = sizeof(map1) / sizeof(map1[0]);
     while (i < map_h)
@@ -142,35 +185,55 @@ int draw_map(t_mlx mlx)
         while (j < map_w)
         {
             if (map1[i][j] == '1')
-                mlx_put_image_to_window(mlx.mlx, mlx.win, wall_img, i * 50, j * 50);
+                mlx_put_image_to_window(mlx, win, wall_img, i * 50, j * 50);
+            else if (map1[i][j] == '0')
+                mlx_put_image_to_window(mlx, win, floor_img, i * 50, j * 50);
+            else if (map1[i][j] == 'P')
+            {
+                mlx_put_image_to_window(mlx, win, floor_img, i * 50, j * 50);
+                mlx_put_image_to_window(mlx, win, p1_img, i * 50, j * 50);
+            }
+            else if (map1[i][j] == 'E')
+                mlx_put_image_to_window(mlx, win, exit_img, i * 50, j * 50);
+            else if (map1[i][j] == 'C')
+            {
+                mlx_put_image_to_window(mlx, win, floor_img, i * 50, j * 50);
+                mlx_put_image_to_window(mlx, win, coin_img, i * 50, j * 50);
+            }
             else
-                mlx_put_image_to_window(mlx.mlx, mlx.win, floor_img, i * 50, j * 50);
+            {
+                printf("bad map \n");
+                exit(1);
+            }
             j++;
         }
         i++;
     }
-        
     printf("width -> %d \n", img_w);
     printf("heigh -> %d \n", img_h);
 }
+
+
 int main(void)
 {
     t_mlx mlx;
     t_img img;
     t_data data;
-
+    t_player p;
     mlx.mlx = mlx_init();
     mlx.win = mlx_new_window(mlx.mlx,
                              WINDOW_WIDTH,
                              WINDOW_HEIGHT,
                              "My first window!");
-    mlx_key_hook(mlx.win, handle_input, &mlx);
     img.img = mlx_new_image(mlx.mlx, 1920, 1080);
     img.addr = mlx_get_data_addr(img.img, &img.bits_per_pixel, &img.line_length,
                                  &img.endian);
     data.img = img;
     data.mlx = mlx;
-    draw_map(mlx);
+    data.player = p;
+    mlx_key_hook(mlx.win, handle_input, &data);
+    
+    mlx_loop_hook(mlx.mlx, draw_map, &data);
 
     mlx_loop(mlx.mlx);
 }
