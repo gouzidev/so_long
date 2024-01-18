@@ -34,7 +34,13 @@ typedef struct s_mlx
  * often used in software to identify the key regardless of hardware.
  * 🚨 MinilibX mac uses keycodes 🚨
  */
-
+char *map[] = {
+"1111111111111",
+"1C010000000C1",
+"1000011111001",
+"1P0011E000001",
+"1111111111111"
+};
 typedef struct s_img
 {
     void *img;
@@ -54,15 +60,17 @@ typedef struct s_data
 {
     t_img img;
     t_mlx mlx;
-    t_player player;
+    t_player *player;
     char *map[];
 } t_data;
 
 
 
 int handle_input(int keysym, t_data *data)
-{
-    
+{   int map_h;
+    int map_w;
+    map_w = strlen(map[0]);
+    map_h = sizeof(map) / sizeof(data);
     // Check the #defines
     // find / -name keysym.h 2>/dev/null
     // find / -name keysymdef.h 2>/dev/null
@@ -76,21 +84,33 @@ int handle_input(int keysym, t_data *data)
     }
     if (keysym == XK_Up)
     {
-        data->player.y -= 1;
+        if (data->player->y - 1 > 0 && data->player->y - 1 != '1')
+        {
+            data->player->y -= 1;
+        }
     }
     if (keysym == XK_Down)
     {
-        data->player.y += 1;
+        if (data->player->y + 1 < map_h && data->player->y + 1 != '1')
+        {
+            data->player->y += 1;
+        }
+        
     }
     if (keysym == XK_Right)
     {
-        data->player.y -= 1;
-
+        if (data->player->x + 1 < map_w && data->player->x + 1 != '1')
+        {
+            data->player->x += 1;
+        }
     }
     if (keysym == XK_Left)
     {
+        if (data->player->x + 1 > 0 && data->player->x + 1 != '1')
+        {
+            data->player->x -= 1;
+        }
     }
-    printf("The %d key has been pressed\n\n", keysym);
     return (0);
 }
 void my_mlx_pixel_put(t_img *img, int x, int y, int color)
@@ -129,12 +149,17 @@ int draw_squares(t_data *data)
         draw_square(&data->img, i);  
         i++;
     }
-    
+
     mlx_put_image_to_window(mlx, win, img, 0, 0);
 
 
     return 0;
 }
+int verify_move()
+{
+    return (1);
+}
+
 // 0 empty space,
 // 1 wall,
 // C collectible,
@@ -142,14 +167,6 @@ int draw_squares(t_data *data)
 // P player
 int draw_map(t_data *data)
 {
-    char *map1[] = {
-    "1111111111111",
-    "1C010000000C1",
-    "1000011111001",
-    "1P0011E000001",
-    "1111111111111"
-    };
-
     int img_w;
     int img_h;
     int map_h;
@@ -177,28 +194,28 @@ int draw_map(t_data *data)
     exit_img = mlx_xpm_file_to_image(mlx, "./exit.xpm", &img_w, &img_h);
     p1_img = mlx_xpm_file_to_image(mlx, "./p1.xpm", &img_w, &img_h);
     coin_img = mlx_xpm_file_to_image(mlx, "./coin.xpm", &img_w, &img_h);
-    map_w = strlen(map1[0]);
-    map_h = sizeof(map1) / sizeof(map1[0]);
+    map_w = strlen(map[0]);
+    map_h = sizeof(map) / sizeof(map[0]);
     while (i < map_h)
     {
         j = 0;
         while (j < map_w)
         {
-            if (map1[i][j] == '1')
-                mlx_put_image_to_window(mlx, win, wall_img, i * 50, j * 50);
-            else if (map1[i][j] == '0')
-                mlx_put_image_to_window(mlx, win, floor_img, i * 50, j * 50);
-            else if (map1[i][j] == 'P')
+            if (map[i][j] == '1')
+                mlx_put_image_to_window(mlx, win, wall_img, j * 50, i * 50);
+            else if (map[i][j] == '0')
+                mlx_put_image_to_window(mlx, win, floor_img, j * 50, i * 50);
+            else if (map[i][j] == 'P')
             {
-                mlx_put_image_to_window(mlx, win, floor_img, i * 50, j * 50);
-                mlx_put_image_to_window(mlx, win, p1_img, i * 50, j * 50);
+                mlx_put_image_to_window(mlx, win, floor_img, j * 50, i * 50);
+                mlx_put_image_to_window(mlx, win, p1_img, j * 50, i * 50);
             }
-            else if (map1[i][j] == 'E')
-                mlx_put_image_to_window(mlx, win, exit_img, i * 50, j * 50);
-            else if (map1[i][j] == 'C')
+            else if (map[i][j] == 'E')
+                mlx_put_image_to_window(mlx, win, exit_img, j * 50, i * 50);
+            else if (map[i][j] == 'C')
             {
-                mlx_put_image_to_window(mlx, win, floor_img, i * 50, j * 50);
-                mlx_put_image_to_window(mlx, win, coin_img, i * 50, j * 50);
+                mlx_put_image_to_window(mlx, win, floor_img, j * 50, i * 50);
+                mlx_put_image_to_window(mlx, win, coin_img, j * 50, i * 50);
             }
             else
             {
@@ -209,8 +226,8 @@ int draw_map(t_data *data)
         }
         i++;
     }
-    printf("width -> %d \n", img_w);
-    printf("heigh -> %d \n", img_h);
+    printf("p x -> %d \n", data->player->x);
+    printf("p y -> %d \n", data->player->y);
 }
 
 
@@ -230,7 +247,7 @@ int main(void)
                                  &img.endian);
     data.img = img;
     data.mlx = mlx;
-    data.player = p;
+    data.player = &p;
     mlx_key_hook(mlx.win, handle_input, &data);
     
     mlx_loop_hook(mlx.mlx, draw_map, &data);
