@@ -36,7 +36,6 @@ typedef struct s_map
     int py;
     int cc;
 }   t_map;
-
 typedef struct s_player
 {
     int x;
@@ -49,9 +48,7 @@ typedef struct s_data
     t_img img;
     t_mlx mlx;
     t_player *player;
-    char **map;
     t_map *mapo;
-    int cc;
 } t_data;
 void print_map(t_map mapo)
 {
@@ -109,7 +106,6 @@ void verify_map(t_map mapo)
         i++;
     }
 }
-
 int ft_sub_strlen(char *s, char c)
 {
 	int i;
@@ -168,10 +164,8 @@ int calculate_map_size(t_map *mapo)
     while (map[i])
     {
         j = 0;
-
         while(map[i][j])
         {
-
             if (map[i][j] == 'C')
                 mapo->cc++;
 
@@ -187,119 +181,108 @@ int calculate_map_size(t_map *mapo)
 
     mapo->h = i;
     mapo->w = j;
-    printf("h -> %d   w -> %d\n", mapo->h, mapo->w);
 
     if (mapo->w <= 2 || mapo->h <= 2)
         return (1);
     return (0);
 }
-void move_player(t_data *data, int m_h, int m_w, int direction, t_map *mapo)
+void move_player(t_map *mapo, int direction)
 {
-  /*
-    0 up
-    1 down
-    2 right
-    3 left
-*/
-    char **map = mapo->map;
-    t_player *p;
-    p->x = mapo->px;
-    p->y = mapo->py;
-
-    if (direction == 0)
+    int m_h = mapo->h;
+    int m_w = mapo->w;
+    if (direction == 0) // up
     {
-        if (p->y - 1 > 0 && map[p->y - 1][p->x]  != '1')
+        if (mapo->py - 1 > 0 && mapo->map[mapo->py - 1][mapo->px] != '1')
         {
-            map[p->y][p->x] = '0';
-            if (map[p->y - 1][p->x] == 'E')
+            mapo->map[mapo->py][mapo->px] = '0';
+            if (mapo->map[mapo->py - 1][mapo->px] == 'C')
+                mapo->cc--;
+            if (mapo->map[mapo->py - 1][mapo->px] == 'E')
             {
                 if (mapo->cc == 0)
-                    exit(1);
+                   exit(1);
             }
             else
-                p->y -= 1;
+                mapo->py -= 1;
         }
     }
-    else if (direction == 1)
+    else if (direction == 1) // down
     {
-        if (p->y + 1 < m_h - 1 && map[p->y + 1][p->x] != '1')
+        if (mapo->py + 1 < m_h && mapo->map[mapo->py + 1][mapo->px] != '1')
         {
-            map[p->y][p->x] = '0';
-            if (map[p->y + 1][p->x] == 'E')
+            mapo->map[mapo->py][mapo->px] = '0';
+            if (mapo->map[mapo->py + 1][mapo->px] == 'C')
+                mapo->cc--;
+            if (mapo->map[mapo->py + 1][mapo->px] == 'E')
             {
                 if (mapo->cc == 0)
-                    exit(1);
+                   exit(1);
             }
             else
-                p->y += 1;
+                mapo->py += 1;
         }
     }
-    else if (direction == 2)
+    else if (direction == 2) // right
     {
-        if (p->x + 1 < m_w - 1  && map[p->y][p->x + 1]  != '1')
+        if (mapo->px + 1 < m_w && mapo->map[mapo->py][mapo->px + 1]  != '1')
         {
-            map[p->y][p->x]  = '0';
-            if (map[p->y][p->x + 1] == 'E')
+            if (mapo->map[mapo->py][mapo->px + 1] == 'C')
+                mapo->cc--;
+            mapo->map[mapo->py][mapo->px]  = '0';
+            mapo->px += 1;
+        }
+    }
+    else if (direction == 3) // left
+    {
+        if (mapo->px - 1 > 0 && mapo->map[mapo->py][mapo->px - 1] != '1')
+        {
+            mapo->map[mapo->py][mapo->px] = '0';
+            if (mapo->map[mapo->py][mapo->px - 1] == 'C')
+                mapo->cc--;
+            if (mapo->map[mapo->py][mapo->px - 1] == 'E')
             {
                 if (mapo->cc == 0)
-                    exit(1);
+                   exit(1);
             }
             else
-                p->x += 1;
+                mapo->px -= 1;
         }
     }
-    else if (direction == 3)
-    {
-        if (p->x - 1 > 0 && map[p->y][p->x - 1] != '1')
-        {
-            map[p->y][p->x] = '0';
-            if (map[p->y][p->x - 1] == 'E')
-            {
-                if (mapo->cc == 0)
-                    exit(1);
-            }
-            else
-                p->x -= 1;
-        }
-    }
+    mapo->map[mapo->py][mapo->px] = 'P';
+    print_map(*mapo);
 }
 int handle_input(int keysym, t_data *data)
 {
-    t_player *p;
     t_map *mapo;
     mapo = data->mapo;
-    // mapo->map = copy_map(data->map/);
-    p->x = data->player->x;
-    p->y = data->player->y;
 
-    // printf("x -> %d  y -> %d\n", p->x, p->y);
+    // printf("px -> %d  py -> %d\n", mapo->px, mapo->py);
     // printf("w -> %d  h -> %d\n", mapo->w, mapo->h);
 
-
-    printf("hello -> %d\n", calculate_map_size(data->mapo));
-
+    calculate_map_size(data->mapo);
+    if (keysym == XK_Escape)
+    {
+        mlx_destroy_window(data->mlx.mlx, data->mlx.win);
+    }
     if (keysym == XK_Up)
     {
-        move_player(data, mapo->h, mapo->w, 0, mapo);
+        move_player(mapo, 0);
     }
     if (keysym == XK_Down)
     {
-        move_player(data, mapo->h, mapo->w, 1, mapo);
+        move_player(mapo, 1);
     }
     if (keysym == XK_Right)
     {
-        move_player(data, mapo->h, mapo->w, 2, mapo);
+        move_player(mapo, 2);
     }
     if (keysym == XK_Left)
     {
-        move_player(data, mapo->h, mapo->w, 3, mapo);
+        move_player(mapo, 3);
         
     }
-
-    if (mapo->map[p->y][p->x] != 'E')
-        mapo->map[p->y][p->x] = 'P';
-    printf("x -> %d  y -> %d\n",p->x,p->y);
-
+    if (mapo->map[mapo->py][mapo->px] != 'E')
+        mapo->map[mapo->py][mapo->px] = 'P';
     return (0);
 }
 void my_mlx_pixel_put(t_img *img, int x, int y, int color)
@@ -337,19 +320,20 @@ int draw_map(t_data *data)
         printf("problem in img\n");
         exit(1);
     }
-    
     wall_img = mlx_xpm_file_to_image(mlx, "./wall.xpm", &img_w, &img_h);
     floor_img = mlx_xpm_file_to_image(mlx, "./floor.xpm", &img_w, &img_h);
     exit_img = mlx_xpm_file_to_image(mlx, "./exit.xpm", &img_w, &img_h);
     p1_img = mlx_xpm_file_to_image(mlx, "./p1.xpm", &img_w, &img_h);
     coin_img = mlx_xpm_file_to_image(mlx, "./coin.xpm", &img_w, &img_h);
     mapo = data->mapo;
+    mapo->cc = 0;
+    printf("cc -> %d\n", mapo->cc);
     if (calculate_map_size(mapo) == 1)
     {
         printf("bad map \n");
         exit(1);
     }
-    printf(",,,,,,,,\n");    
+    printf("cc -> %d\n", mapo->cc);
     verify_map(*mapo);
 
     mlx_destroy_image(data->mlx.mlx, data->img.img);
@@ -367,10 +351,9 @@ int draw_map(t_data *data)
                 mlx_put_image_to_window(mlx, win, floor_img, j * 50, i * 50);
             else if (mapo->map[i][j] == 'P')
             {
-                data->player->y = i;
-                data->player->x = j;
                 mapo->px = j;
                 mapo->py = i;
+
                 mlx_put_image_to_window(mlx, win, p1_img, j * 50, i * 50);
             }
             else if (mapo->map[i][j] == 'E')
@@ -388,9 +371,9 @@ int draw_map(t_data *data)
         }
         i++;
     }
-}
 
-int main(int ac, char *av[])
+}
+int main(int ac, char *av[]) 
 {
     t_map *mapo;
     char **map;
@@ -398,7 +381,7 @@ int main(int ac, char *av[])
     int line_count;
     char *line;
     int line_len;
-    fd = open("map.ber", O_RDONLY);
+    fd = open("map2.ber", O_RDONLY);
     if (fd <= 0)
     {
         printf("problem reading the file\n");
@@ -412,7 +395,7 @@ int main(int ac, char *av[])
         line = get_next_line(fd);
     }
     close(fd);
-    fd = open("map.ber", O_RDONLY);
+    fd = open("map2.ber", O_RDONLY);
     if (fd <= 0)
     {
         printf("problem reading the file\n");
@@ -433,7 +416,6 @@ int main(int ac, char *av[])
     t_mlx mlx;
     t_img img;
     t_data data;
-    t_player p;
     mlx.mlx = mlx_init();
     mlx.win = mlx_new_window(mlx.mlx,
                              WINDOW_WIDTH,
@@ -445,8 +427,6 @@ int main(int ac, char *av[])
     data.img = img;
     data.mlx = mlx;
     data.player = malloc(sizeof(t_player));
-    data.player = &p;
-    data.map = map;
     mapo = malloc(sizeof(t_map));
     mapo->map = map;
     data.mapo = mapo;
