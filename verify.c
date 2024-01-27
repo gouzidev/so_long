@@ -42,7 +42,15 @@ typedef struct s_data
     char **map;
     int collectables_count;
 } t_data;
-
+typedef struct s_map
+{
+    char **map;
+    int w;
+    int h;
+    int px;
+    int py;
+    int cc;
+}   t_map;
 void verify_borders(char **map, int w, int h)
 {
     int i;
@@ -52,7 +60,7 @@ void verify_borders(char **map, int w, int h)
     {
         if (map[0][i] != '1' || map[h - 1][i] != '1')
         {
-            printf("bad map\n");
+            printf("bad map borders\n");
             exit(1);
         }
         i++;
@@ -62,7 +70,7 @@ void verify_borders(char **map, int w, int h)
     {
         if (map[i][0] != '1' || map[i][w - 1] != '1')
         {
-            printf("bad map\n");
+            printf("bad map borders\n");
             exit(1);
         }
         i++;
@@ -197,7 +205,77 @@ int verify_exit(char **map, int w, int h, int py, int px)
     }
     return r;
 }
+int **make_cc_arr(char **map, int w, int h, int cc)
+{
+    int i;
+    int j;
+    int **arr;
+    int ccc;
+    ccc = cc;
+    arr = malloc((cc + 1) * sizeof(char *));
+    // arr =>   [[x, y, 0]]
 
+    i = 1;
+    ccc = 0;
+    while (i < h - 1)
+    {
+        j = 1;
+        while (j < w - 1)
+        {
+            if (map[i][j] == 'C')
+            {
+                arr[ccc] = malloc(3 * sizeof(int));
+                arr[ccc][0] = i;
+                arr[ccc][1] = j;
+                arr[ccc][2] = 0;
+                ccc++;
+            }
+            j++;
+        }
+        i++;
+    }
+    arr[ccc] = NULL;
+    
+    return arr;
+}
+
+int verify_cc(char **map, int w, int h, int py, int px)
+{
+    int r = 1;
+    if (map[py][px] == 'E')
+        return 0;
+    if (map[py][px] == 'x')
+        return 1;
+    if (py - 1 >= 1 && map[py - 1][px] != '1' && map[py - 1][px] != 'x')
+    {
+        map[py][px] = 'x';
+        r = verify_exit(map, w, h, py - 1, px);
+        if (r == 0)
+            return r;
+    }
+    if (px + 1 < w - 1 && map[py][px + 1] != '1' && map[py][px + 1] != 'x')
+    {
+        map[py][px] = 'x';
+        r = verify_exit(map, w, h, py, px + 1);
+        if (r == 0)
+            return r;
+    }
+    if (px - 1 >= 1 && map[py][px - 1] != '1' && map[py][px - 1] != 'x')
+    {
+        map[py][px] = 'x';
+        r = verify_exit(map, w, h, py, px - 1);
+        if (r == 0)
+            return r;
+    }
+    if (py + 1 < h - 1 && map[py + 1][px] != '1' && map[py + 1][px] != 'x')
+    {
+        map[py][px] = 'x';
+        r = verify_exit(map, w, h, py + 1, px);
+        if (r == 0)
+            return r;
+    }
+    return r;
+}
 int main(int ac, char *av[])
 {
     char **map;
@@ -208,7 +286,7 @@ int main(int ac, char *av[])
     int w;
     int h;
     int cc;
-    fd = open("map.ber", O_RDONLY);
+    fd = open("map2.ber", O_RDONLY);
     if (fd <= 0)
     {
         printf("problem reading the file\n");
@@ -222,7 +300,7 @@ int main(int ac, char *av[])
         line = get_next_line(fd);
     }
     close(fd);
-    fd = open("map.ber", O_RDONLY);
+    fd = open("map2.ber", O_RDONLY);
     if (fd <= 0)
     {
         printf("problem reading the file\n");
@@ -242,6 +320,13 @@ int main(int ac, char *av[])
     map[line_count] = ft_strdup_len_nonl(line, line_len);
     calculate_map_size(map, &w, &h, &cc);
     char **copy = copy_map(map, w, h);
-    print_map(map);
-    printf("%d \n", verify_exit(copy, w, h, 3, 1));
+    int **cc_arr = make_cc_arr(map, w, h, cc);
+    int i = 0;
+    int j = 0;
+    while (cc_arr[i])
+    {
+        printf(" %d, %d    %d\n", cc_arr[i][0],cc_arr[i][1],cc_arr[i][2]);
+        i++;
+    }
+    
 }

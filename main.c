@@ -42,7 +42,6 @@ typedef struct s_player
     int y;
     int score;
 }  t_player;
-
 typedef struct s_data
 {
     t_img img;
@@ -73,39 +72,7 @@ void print_map(t_map mapo)
         i++;
     }
 }
-void verify_map(t_map mapo)
-{
-    int i;
 
-    i = 0;
-    char **map;
-
-    map = mapo.map;
-    int w;
-    int h;
-
-    w = mapo.w;
-    h = mapo.h;
-    while (i < w)
-    {
-        if (map[0][i] != '1' || map[h - 1][i] != '1')
-        {
-            printf("bad map\n");
-            exit(1);
-        }
-        i++;
-    }
-    i = 0;
-    while (i < h)
-    {
-        if (map[i][0] != '1' || map[i][w - 1] != '1')
-        {
-            printf("bad map\n");
-            exit(1);
-        }
-        i++;
-    }
-}
 int ft_sub_strlen(char *s, char c)
 {
 	int i;
@@ -154,13 +121,12 @@ char **copy_map(char **map, int w, int h)
     new_map[i] = NULL;
     return (new_map);
 }
-int calculate_map_size(t_map *mapo)
+int set_mapo(t_map *mapo)
 {
     int i;
     int j;
     i = 0;
     char **map = mapo->map;
-
     while (map[i])
     {
         j = 0;
@@ -185,6 +151,78 @@ int calculate_map_size(t_map *mapo)
     if (mapo->w <= 2 || mapo->h <= 2)
         return (1);
     return (0);
+}
+void verify_borders(t_map *mapo)
+{
+    int i;
+    int w;
+    int h;
+    char **map;
+
+    i = 0;
+    map = mapo->map;
+    w = mapo->w;
+    h = mapo->h;
+    while (i < w)
+    {
+        if (map[0][i] != '1' || map[h - 1][i] != '1')
+        {
+            printf("bad map borders\n");
+            exit(1);
+        }
+        i++;
+    }
+    i = 0;
+    while (i < h)
+    {
+        if (map[i][0] != '1' || map[i][w - 1] != '1')
+        {
+            printf("bad map borders\n");
+            exit(1);
+        }
+        i++;
+    }
+}
+
+int verify_exit(char **map, int w, int h, int py, int px)
+{
+    int r = 1;
+    if (map[py][px] == 'E')
+        return 0;
+    if (map[py][px] == 'x')
+        return 1;
+    if (map[py][px] == 'C')
+        printf("found C %d, %d\n", py, px);
+    
+    if (py - 1 >= 1 && map[py - 1][px] != '1' && map[py - 1][px] != 'x')
+    {
+        map[py][px] = 'x';
+        r = verify_exit(map, w, h, py - 1, px);
+        if (r == 0)
+            return r;
+    }
+    if (px + 1 < w - 1 && map[py][px + 1] != '1' && map[py][px + 1] != 'x')
+    {
+        map[py][px] = 'x';
+        r = verify_exit(map, w, h, py, px + 1);
+        if (r == 0)
+            return r;
+    }
+    if (px - 1 >= 1 && map[py][px - 1] != '1' && map[py][px - 1] != 'x')
+    {
+        map[py][px] = 'x';
+        r = verify_exit(map, w, h, py, px - 1);
+        if (r == 0)
+            return r;
+    }
+    if (py + 1 < h - 1 && map[py + 1][px] != '1' && map[py + 1][px] != 'x')
+    {
+        map[py][px] = 'x';
+        r = verify_exit(map, w, h, py + 1, px);
+        if (r == 0)
+            return r;
+    }
+    return r;
 }
 void move_player(t_map *mapo, int direction)
 {
@@ -259,7 +297,7 @@ int handle_input(int keysym, t_data *data)
     // printf("px -> %d  py -> %d\n", mapo->px, mapo->py);
     // printf("w -> %d  h -> %d\n", mapo->w, mapo->h);
 
-    calculate_map_size(data->mapo);
+    set_mapo(data->mapo);
     if (keysym == XK_Escape)
     {
         mlx_destroy_window(data->mlx.mlx, data->mlx.win);
@@ -327,15 +365,13 @@ int draw_map(t_data *data)
     coin_img = mlx_xpm_file_to_image(mlx, "./coin.xpm", &img_w, &img_h);
     mapo = data->mapo;
     mapo->cc = 0;
-    printf("cc -> %d\n", mapo->cc);
-    if (calculate_map_size(mapo) == 1)
+    if (set_mapo(mapo) == 1)
     {
-        printf("bad map \n");
+        printf("bad map\n");
         exit(1);
     }
-    printf("cc -> %d\n", mapo->cc);
-    verify_map(*mapo);
-
+    verify_borders(mapo);
+ 
     mlx_destroy_image(data->mlx.mlx, data->img.img);
     data->img.img = mlx_new_image(data->mlx.mlx, 500, 500);
     data->img.addr = mlx_get_data_addr(data->img.img, &data->img.bits_per_pixel, &data->img.line_length,
@@ -353,15 +389,12 @@ int draw_map(t_data *data)
             {
                 mapo->px = j;
                 mapo->py = i;
-
                 mlx_put_image_to_window(mlx, win, p1_img, j * 50, i * 50);
             }
             else if (mapo->map[i][j] == 'E')
                 mlx_put_image_to_window(mlx, win, exit_img, j * 50, i * 50);
             else if (mapo->map[i][j] == 'C')
-            {
                 mlx_put_image_to_window(mlx, win, coin_img, j * 50, i * 50);
-            }
             else
             {
                 printf("bad map (invalid character) %c\n\n", mapo->map[i][j]);
@@ -371,9 +404,8 @@ int draw_map(t_data *data)
         }
         i++;
     }
-
 }
-int main(int ac, char *av[]) 
+char **read_map()
 {
     t_map *mapo;
     char **map;
@@ -381,7 +413,8 @@ int main(int ac, char *av[])
     int line_count;
     char *line;
     int line_len;
-    fd = open("map2.ber", O_RDONLY);
+    char *path = "map2.ber";
+    fd = open(path, O_RDONLY);
     if (fd <= 0)
     {
         printf("problem reading the file\n");
@@ -395,7 +428,7 @@ int main(int ac, char *av[])
         line = get_next_line(fd);
     }
     close(fd);
-    fd = open("map2.ber", O_RDONLY);
+    fd = open(path, O_RDONLY);
     if (fd <= 0)
     {
         printf("problem reading the file\n");
@@ -413,9 +446,23 @@ int main(int ac, char *av[])
     }
     line_len = ft_strlen(line);
     map[line_count] = ft_strdup_len_nonl(line, line_len);
+    return map;
+}
+
+
+int main(int ac, char *av[]) 
+{
+    t_map *mapo;
     t_mlx mlx;
     t_img img;
     t_data data;
+    int r;
+
+    char **map;
+    char **map_copy;
+    map = read_map();
+    mapo = malloc(sizeof(t_map));
+    mapo->map = map;
     mlx.mlx = mlx_init();
     mlx.win = mlx_new_window(mlx.mlx,
                              WINDOW_WIDTH,
@@ -427,9 +474,20 @@ int main(int ac, char *av[])
     data.img = img;
     data.mlx = mlx;
     data.player = malloc(sizeof(t_player));
-    mapo = malloc(sizeof(t_map));
-    mapo->map = map;
     data.mapo = mapo;
+    if (set_mapo(mapo) == 1)
+    {
+        printf("bad map");
+        exit(1);
+    }
+    verify_borders(mapo);
+    map_copy = copy_map(mapo->map, mapo->w, mapo->h);
+    r = verify_exit(map_copy, mapo->w, mapo->h, mapo->py, mapo->px);
+    if (r == 1)
+    {
+        printf("shitty ass map\n");
+        exit(1);
+    }
     mlx_key_hook(mlx.win, handle_input, &data);
     
     mlx_loop_hook(mlx.mlx, draw_map, &data);
