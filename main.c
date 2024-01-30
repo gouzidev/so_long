@@ -1,15 +1,13 @@
-#include "minilibx/mlx.h"
-#include <X11/keysym.h>
+#include <mlx.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <X11/keysym.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "./gnl/get_next_line.h"
 #include <stdio.h>
+#include "./gnl_copy/get_next_line.h"
 #define MLX_ERROR 1
 #define WINDOW_WIDTH 1000
 #define WINDOW_HEIGHT 1000
@@ -19,6 +17,15 @@ typedef struct s_mlx
     void *mlx;
     void *win;
 } t_mlx;
+typedef struct s_assets {
+    void *wall_img;
+    void *floor_img;
+    void *coin_img;
+    void *exit_img;
+    void *player_img;
+    void *demon0_img;
+    void *p1_img;
+}  t_assets;
 typedef struct s_img
 {
     void *img;
@@ -72,7 +79,15 @@ void print_map(t_map mapo)
         i++;
     }
 }
+int	ft_istrlen(const char *s)
+{
+	int	i;
 
+	i = 0;
+	while (s[i])
+		i++;
+	return (i);
+}
 int ft_sub_strlen(char *s, char c)
 {
 	int i;
@@ -191,43 +206,36 @@ int verify_exit(char **map, int w, int h, int py, int px)
         return 0;
     if (map[py][px] == 'x')
         return 1;
-    if (map[py][px] == 'C')
-        printf("found C %d, %d\n", py, px);
-    
+    map[py][px] = 'x';
     if (py - 1 >= 1 && map[py - 1][px] != '1' && map[py - 1][px] != 'x')
     {
-        map[py][px] = 'x';
         r = verify_exit(map, w, h, py - 1, px);
         if (r == 0)
             return r;
     }
     if (px + 1 < w - 1 && map[py][px + 1] != '1' && map[py][px + 1] != 'x')
     {
-        map[py][px] = 'x';
         r = verify_exit(map, w, h, py, px + 1);
         if (r == 0)
             return r;
     }
     if (px - 1 >= 1 && map[py][px - 1] != '1' && map[py][px - 1] != 'x')
     {
-        map[py][px] = 'x';
         r = verify_exit(map, w, h, py, px - 1);
         if (r == 0)
             return r;
     }
     if (py + 1 < h - 1 && map[py + 1][px] != '1' && map[py + 1][px] != 'x')
     {
-        map[py][px] = 'x';
         r = verify_exit(map, w, h, py + 1, px);
         if (r == 0)
             return r;
     }
     return r;
 }
-void move_player(t_map *mapo, int direction)
+void move_vertical(t_map *mapo, int direction)
 {
-    int m_h = mapo->h;
-    int m_w = mapo->w;
+
     if (direction == 0) // up
     {
         if (mapo->py - 1 > 0 && mapo->map[mapo->py - 1][mapo->px] != '1')
@@ -244,9 +252,11 @@ void move_player(t_map *mapo, int direction)
                 mapo->py -= 1;
         }
     }
-    else if (direction == 1) // down
+    else if (direction == 2) // down
     {
-        if (mapo->py + 1 < m_h && mapo->map[mapo->py + 1][mapo->px] != '1')
+        printf("px -> %d  py -> %d\n", mapo->px, mapo->py);
+    printf("w -> %d  h -> %d\n", mapo->w, mapo->h);
+        if (mapo->py + 1 < mapo->h && mapo->map[mapo->py + 1][mapo->px] != '1')
         {
             mapo->map[mapo->py][mapo->px] = '0';
             if (mapo->map[mapo->py + 1][mapo->px] == 'C')
@@ -260,14 +270,23 @@ void move_player(t_map *mapo, int direction)
                 mapo->py += 1;
         }
     }
-    else if (direction == 2) // right
+}
+void move_horizontal(t_map *mapo, int direction)
+{
+    if (direction == 1) // right
     {
-        if (mapo->px + 1 < m_w && mapo->map[mapo->py][mapo->px + 1]  != '1')
+        if (mapo->px + 1 < mapo->w && mapo->map[mapo->py][mapo->px + 1]  != '1')
         {
+            mapo->map[mapo->py][mapo->px]  = '0';
             if (mapo->map[mapo->py][mapo->px + 1] == 'C')
                 mapo->cc--;
-            mapo->map[mapo->py][mapo->px]  = '0';
-            mapo->px += 1;
+            if (mapo->map[mapo->py][mapo->px + 1] == 'E')
+            {
+                if (mapo->cc == 0)
+                   exit(1);
+            }
+            else
+                mapo->px += 1;
         }
     }
     else if (direction == 3) // left
@@ -286,6 +305,17 @@ void move_player(t_map *mapo, int direction)
                 mapo->px -= 1;
         }
     }
+}
+
+void move_player(t_map *mapo, int direction)
+{
+    int m_h = mapo->h;
+    int m_w = mapo->w;
+    if (direction % 2 == 0)
+        move_vertical(mapo, direction);
+    else
+        move_horizontal(mapo, direction);
+
     mapo->map[mapo->py][mapo->px] = 'P';
     print_map(*mapo);
 }
@@ -298,27 +328,16 @@ int handle_input(int keysym, t_data *data)
     // printf("w -> %d  h -> %d\n", mapo->w, mapo->h);
 
     set_mapo(data->mapo);
-    if (keysym == XK_Escape)
-    {
+    if (keysym == 53)
         mlx_destroy_window(data->mlx.mlx, data->mlx.win);
-    }
-    if (keysym == XK_Up)
-    {
+    if (keysym == 13) // w
         move_player(mapo, 0);
-    }
-    if (keysym == XK_Down)
-    {
-        move_player(mapo, 1);
-    }
-    if (keysym == XK_Right)
-    {
+    if (keysym == 1) // s
         move_player(mapo, 2);
-    }
-    if (keysym == XK_Left)
-    {
+    if (keysym == 2) //d
+        move_player(mapo, 1);
+    if (keysym == 0) // a
         move_player(mapo, 3);
-        
-    }
     if (mapo->map[mapo->py][mapo->px] != 'E')
         mapo->map[mapo->py][mapo->px] = 'P';
     return (0);
@@ -330,6 +349,12 @@ void my_mlx_pixel_put(t_img *img, int x, int y, int color)
     dst = img->addr + (y * img->line_length + x * (img->bits_per_pixel / 8));
     *(unsigned int *)dst = color;
 }
+int print_exit(char *msg, int exit_msg)
+{
+    printf("%s", msg);
+    exit(exit_msg);
+}
+
 int draw_map(t_data *data)
 {
     int img_w;
@@ -404,6 +429,7 @@ int draw_map(t_data *data)
         }
         i++;
     }
+    return (0);
 }
 char **read_map()
 {
@@ -416,10 +442,7 @@ char **read_map()
     char *path = "map2.ber";
     fd = open(path, O_RDONLY);
     if (fd <= 0)
-    {
-        printf("problem reading the file\n");
-        exit(1);
-    }
+        print_exit("problem reading the file\n", 1);
     line = get_next_line(fd);
     line_count = 0;
     while (line)
@@ -430,10 +453,7 @@ char **read_map()
     close(fd);
     fd = open(path, O_RDONLY);
     if (fd <= 0)
-    {
-        printf("problem reading the file\n");
-        exit(1);
-    }
+        print_exit("problem reading the file\n", 1);
     map = malloc((line_count + 1) * sizeof(char *));
     line = get_next_line(fd);
     line_count = 0;
@@ -452,6 +472,7 @@ char **read_map()
 
 int main(int ac, char *av[]) 
 {
+    // choof tv get images from there 
     t_map *mapo;
     t_mlx mlx;
     t_img img;
@@ -476,21 +497,13 @@ int main(int ac, char *av[])
     data.player = malloc(sizeof(t_player));
     data.mapo = mapo;
     if (set_mapo(mapo) == 1)
-    {
-        printf("bad map");
-        exit(1);
-    }
+        print_exit("bad map\n", 1);
     verify_borders(mapo);
     map_copy = copy_map(mapo->map, mapo->w, mapo->h);
     r = verify_exit(map_copy, mapo->w, mapo->h, mapo->py, mapo->px);
     if (r == 1)
-    {
-        printf("shitty ass map\n");
-        exit(1);
-    }
+        print_exit("shitty ass map\n", 1);
     mlx_key_hook(mlx.win, handle_input, &data);
-    
     mlx_loop_hook(mlx.mlx, draw_map, &data);
-
     mlx_loop(mlx.mlx);
 }
