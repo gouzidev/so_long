@@ -198,7 +198,6 @@ void verify_borders(t_map *mapo)
         i++;
     }
 }
-
 int verify_exit(char **map, int w, int h, int py, int px)
 {
     int r = 1;
@@ -306,7 +305,6 @@ void move_horizontal(t_map *mapo, int direction)
         }
     }
 }
-
 void move_player(t_map *mapo, int direction)
 {
     int m_h = mapo->h;
@@ -354,72 +352,45 @@ int print_exit(char *msg, int exit_msg)
     printf("%s", msg);
     exit(exit_msg);
 }
-
-int draw_map(t_data *data)
+t_assets *set_images(t_data *data)
 {
     int img_w;
     int img_h;
+    t_assets *images;
+
+    images = malloc(sizeof(t_assets));
+    images->wall_img = mlx_xpm_file_to_image(data->mlx.mlx, "./wall.xpm", &img_w, &img_h);
+    images->floor_img = mlx_xpm_file_to_image(data->mlx.mlx, "./floor.xpm", &img_w, &img_h);
+    images->exit_img = mlx_xpm_file_to_image(data->mlx.mlx, "./exit.xpm", &img_w, &img_h);
+    images->p1_img = mlx_xpm_file_to_image(data->mlx.mlx, "./p1.xpm", &img_w, &img_h);
+    images->coin_img = mlx_xpm_file_to_image(data->mlx.mlx, "./coin.xpm", &img_w, &img_h);
+    return (images);
+}
+void draw_map_images(t_map *mapo, t_data *data, t_assets *images)
+{
     int i;
     int j;
-    void *wall_img;
-    void *floor_img;
-    void *coin_img;
-    void *exit_img;
-    void *player_img;
-    void *demon0_img;
-    void *p1_img;
-    void *mlx;
-    void *win;
-    t_img img;
-    t_map *mapo;
 
-    img = data->img;
-    mlx = data->mlx.mlx;
-    win = data->mlx.win;
     i = 0;
-    j = 0;
-    if (img.img == NULL)
-    {
-        printf("problem in img\n");
-        exit(1);
-    }
-    wall_img = mlx_xpm_file_to_image(mlx, "./wall.xpm", &img_w, &img_h);
-    floor_img = mlx_xpm_file_to_image(mlx, "./floor.xpm", &img_w, &img_h);
-    exit_img = mlx_xpm_file_to_image(mlx, "./exit.xpm", &img_w, &img_h);
-    p1_img = mlx_xpm_file_to_image(mlx, "./p1.xpm", &img_w, &img_h);
-    coin_img = mlx_xpm_file_to_image(mlx, "./coin.xpm", &img_w, &img_h);
-    mapo = data->mapo;
-    mapo->cc = 0;
-    if (set_mapo(mapo) == 1)
-    {
-        printf("bad map\n");
-        exit(1);
-    }
-    verify_borders(mapo);
- 
-    mlx_destroy_image(data->mlx.mlx, data->img.img);
-    data->img.img = mlx_new_image(data->mlx.mlx, 500, 500);
-    data->img.addr = mlx_get_data_addr(data->img.img, &data->img.bits_per_pixel, &data->img.line_length,
-                                 &data->img.endian);
     while (i < mapo->h)
     {
         j = 0;
         while (j < mapo->w)
         {
             if (mapo->map[i][j] == '1')
-                mlx_put_image_to_window(mlx, win, wall_img, j * 50, i * 50);
+                mlx_put_image_to_window(data->mlx.mlx, data->mlx.win, images->wall_img, j * 50, i * 50);
             else if (mapo->map[i][j] == '0')
-                mlx_put_image_to_window(mlx, win, floor_img, j * 50, i * 50);
+                mlx_put_image_to_window(data->mlx.mlx, data->mlx.win, images->floor_img, j * 50, i * 50);
             else if (mapo->map[i][j] == 'P')
             {
                 mapo->px = j;
                 mapo->py = i;
-                mlx_put_image_to_window(mlx, win, p1_img, j * 50, i * 50);
+                mlx_put_image_to_window(data->mlx.mlx, data->mlx.win, images->p1_img, j * 50, i * 50);
             }
             else if (mapo->map[i][j] == 'E')
-                mlx_put_image_to_window(mlx, win, exit_img, j * 50, i * 50);
+                mlx_put_image_to_window(data->mlx.mlx, data->mlx.win, images->exit_img, j * 50, i * 50);
             else if (mapo->map[i][j] == 'C')
-                mlx_put_image_to_window(mlx, win, coin_img, j * 50, i * 50);
+                mlx_put_image_to_window(data->mlx.mlx, data->mlx.win, images->coin_img, j * 50, i * 50);
             else
             {
                 printf("bad map (invalid character) %c\n\n", mapo->map[i][j]);
@@ -429,9 +400,34 @@ int draw_map(t_data *data)
         }
         i++;
     }
+}
+int draw_map(t_data *data)
+{
+    void *mlx;
+    void *win;
+    t_img img;
+    t_map *mapo;
+    t_assets *images;
+
+    img = data->img;
+    mlx = data->mlx.mlx;
+    win = data->mlx.win;
+    if (img.img == NULL)
+        print_exit("problem in img\n", 1);
+    images = set_images(data);
+
+    mapo = data->mapo;
+    mapo->cc = 0;
+    if (set_mapo(mapo) == 1)
+        print_exit("bad map\n", 1);
+    verify_borders(mapo);
+    data->img.img = mlx_new_image(data->mlx.mlx, 500, 500);
+    data->img.addr = mlx_get_data_addr(data->img.img, &data->img.bits_per_pixel, &data->img.line_length,
+                                 &data->img.endian);
+    draw_map_images(mapo, data, images);
     return (0);
 }
-char **read_map()
+char **read_map(char *path)
 {
     t_map *mapo;
     char **map;
@@ -439,7 +435,6 @@ char **read_map()
     int line_count;
     char *line;
     int line_len;
-    char *path = "map2.ber";
     fd = open(path, O_RDONLY);
     if (fd <= 0)
         print_exit("problem reading the file\n", 1);
@@ -468,8 +463,6 @@ char **read_map()
     map[line_count] = ft_strdup_len_nonl(line, line_len);
     return map;
 }
-
-
 int main(int ac, char *av[]) 
 {
     // choof tv get images from there 
@@ -481,7 +474,7 @@ int main(int ac, char *av[])
 
     char **map;
     char **map_copy;
-    map = read_map();
+    map = read_map(av[1]);
     mapo = malloc(sizeof(t_map));
     mapo->map = map;
     mlx.mlx = mlx_init();
