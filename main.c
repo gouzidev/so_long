@@ -427,28 +427,13 @@ int draw_map(t_data *data)
     draw_map_images(mapo, data, images);
     return (0);
 }
-char **read_map(char *path)
+
+char **load_map(int fd, int line_count)
 {
-    t_map *mapo;
-    char **map;
-    int fd;
-    int line_count;
-    char *line;
     int line_len;
-    fd = open(path, O_RDONLY);
-    if (fd <= 0)
-        print_exit("problem reading the file\n", 1);
-    line = get_next_line(fd);
-    line_count = 0;
-    while (line)
-    {
-        line_count++;
-        line = get_next_line(fd);
-    }
-    close(fd);
-    fd = open(path, O_RDONLY);
-    if (fd <= 0)
-        print_exit("problem reading the file\n", 1);
+    char **map;
+    char *line;
+
     map = malloc((line_count + 1) * sizeof(char *));
     line = get_next_line(fd);
     line_count = 0;
@@ -463,6 +448,59 @@ char **read_map(char *path)
     map[line_count] = ft_strdup_len_nonl(line, line_len);
     return map;
 }
+char **read_map(char *path)
+{
+    char **map;
+    int fd;
+    int line_count;
+    char *line;
+    fd = open(path, O_RDONLY);
+    if (fd <= 0)
+        print_exit("problem reading the file\n", 1);
+    line = get_next_line(fd);
+    line_count = 0;
+    while (line)
+    {
+        line_count++;
+        line = get_next_line(fd);
+    }
+    close(fd);
+    fd = open(path, O_RDONLY);
+    if (fd <= 0)
+        print_exit("problem reading the file\n", 1);
+    map = load_map(fd, line_count);
+    return map;
+}
+int ends_with(char *s, char *end)
+{
+    int i;
+    int j;
+
+    i = 0;
+    int good;
+
+    good = 0;
+    while (s[i])
+    {
+        j = 0;
+        while (s[i] == end[j])
+        {
+            i++;
+            j++;
+        if (s[i] == '\0')
+            return (1);
+        }
+        i++;
+    }
+    return (0);
+}
+void verify_map_name(int ac,  char *av[])
+{
+    if (ac != 2)
+        print_exit("bad args count\n", 1);
+    if (ends_with(av[1], ".ber") == 0)
+        print_exit("bad map name\n", 1);
+}
 int main(int ac, char *av[]) 
 {
     // choof tv get images from there 
@@ -474,6 +512,7 @@ int main(int ac, char *av[])
 
     char **map;
     char **map_copy;
+    verify_map_name(ac, av);
     map = read_map(av[1]);
     mapo = malloc(sizeof(t_map));
     mapo->map = map;
