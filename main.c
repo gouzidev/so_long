@@ -19,9 +19,8 @@ typedef struct s_assets
 	void		*floor_img;
 	void		*coin_img;
 	void		*exit_img;
-	void		*player_img;
 	void		*demon0_img;
-	void		*p1_img;
+	void		*player_img;
 }				t_assets;
 typedef struct s_img
 {
@@ -52,7 +51,45 @@ typedef struct s_data
 	t_mlx		mlx;
 	t_player	*player;
 	t_map		*mapo;
+	t_assets	*imgs;
 }				t_data;
+void free_map_and_exit(char **map, int stop)
+{
+	int i;
+
+	i = 0;
+	while (i < stop)
+	{
+		free(map[i]);
+		i++;
+	}
+	free(map[i]);
+	exit(1);
+}
+void free_mapo_and_exit(t_map *mapo)
+{
+	free(mapo->map);
+	free(mapo);
+	exit(1);
+}
+void free_imgs_and_exit(t_assets *images)
+{
+	if (images->coin_img != NULL)
+		free(images->coin_img);
+	if (images->exit_img != NULL)
+		free(images->exit_img);
+	if (images->floor_img != NULL)
+		free(images->floor_img);
+	if (images->player_img != NULL)
+		free(images->player_img);
+	if (images->wall_img != NULL)
+		free(images->wall_img);
+	free(images);
+	//	if (images->demon0_img != NULL)
+	// free(images->demon0_img);
+	exit(1);
+}
+
 int	print_exit(char *msg, int exit_msg)
 {
 	printf("%s", msg);
@@ -140,7 +177,7 @@ char	**copy_map(char **map, int w, int h)
 	new_map[i] = NULL;
 	return (new_map);
 }
-int	set_mapo(t_map *mapo)
+void	set_mapo(t_map *mapo)
 {
 	int		i;
 	int		j;
@@ -166,9 +203,6 @@ int	set_mapo(t_map *mapo)
 	}
 	mapo->h = i;
 	mapo->w = j;
-	if (mapo->w <= 2 || mapo->h <= 2)
-		return (1);
-	return (0);
 }
 void	verify_borders(t_map *mapo)
 {
@@ -278,7 +312,10 @@ void	move_horizontal(t_map *mapo, int direction)
 			if (mapo->map[mapo->py][mapo->px + 1] == 'E')
 			{
 				if (mapo->cc == 0)
+				{
+					system("leaks a.out");
 					exit(1);
+				}
 			}
 			else
 				mapo->px += 1;
@@ -321,7 +358,11 @@ int	handle_input(int keysym, t_data *data)
 	mapo = data->mapo;
 	set_mapo(data->mapo);
 	if (keysym == 53)
+	{
 		mlx_destroy_window(data->mlx.mlx, data->mlx.win);
+		free_imgs_and_exit(data->imgs);
+		exit(1);
+	}
 	if (keysym == 13) // w
 		move_player(mapo, 0);
 	if (keysym == 1) // s
@@ -334,32 +375,29 @@ int	handle_input(int keysym, t_data *data)
 		mapo->map[mapo->py][mapo->px] = 'P';
 	return (0);
 }
-void	my_mlx_pixel_put(t_img *img, int x, int y, int color)
-{
-	char	*dst;
-
-	dst = img->addr + (y * img->line_length + x * (img->bits_per_pixel / 8));
-	*(unsigned int *)dst = color;
-}
-
-t_assets	*set_images(t_data *data)
+void set_images(t_data *data)
 {
 	int			img_w;
 	int			img_h;
 	t_assets	*images;
 
 	images = malloc(sizeof(t_assets));
-	images->wall_img = mlx_xpm_file_to_image(data->mlx.mlx, "./wall.xpm",
-			&img_w, &img_h);
-	images->floor_img = mlx_xpm_file_to_image(data->mlx.mlx, "./floor.xpm",
-			&img_w, &img_h);
-	images->exit_img = mlx_xpm_file_to_image(data->mlx.mlx, "./exit.xpm",
-			&img_w, &img_h);
-	images->p1_img = mlx_xpm_file_to_image(data->mlx.mlx, "./p1.xpm", &img_w,
-			&img_h);
-	images->coin_img = mlx_xpm_file_to_image(data->mlx.mlx, "./coin.xpm",
-			&img_w, &img_h);
-	return (images);
+	images->wall_img = mlx_xpm_file_to_image(data->mlx.mlx, "./wall.xpm", &img_w, &img_h);
+	if (images->wall_img == NULL)
+		free_imgs_and_exit(images);
+	images->floor_img = mlx_xpm_file_to_image(data->mlx.mlx, "./floor.xpm", &img_w, &img_h);
+	if (images->floor_img == NULL)
+		free_imgs_and_exit(images);
+	images->exit_img = mlx_xpm_file_to_image(data->mlx.mlx, "./exit.xpm", &img_w, &img_h);
+	if (images->exit_img == NULL)
+		free_imgs_and_exit(images);
+	images->player_img = mlx_xpm_file_to_image(data->mlx.mlx, "./p1.xpm", &img_w, &img_h);
+	if (images->player_img == NULL)
+		free_imgs_and_exit(images);
+	images->coin_img = mlx_xpm_file_to_image(data->mlx.mlx, "./coin.xpm", &img_w, &img_h);
+	if (images->coin_img == NULL)
+		free_imgs_and_exit(images);
+	data->imgs = images;
 }
 void	set_px_py(t_map *mapo, int i, int j)
 {
@@ -387,7 +425,7 @@ void	draw_map_images(t_map *mapo, t_data *data, t_assets *images)
 			{
 				set_px_py(mapo, i, j);
 				mlx_put_image_to_window(data->mlx.mlx, data->mlx.win,
-					images->p1_img, j * 50, i * 50);
+					images->player_img, j * 50, i * 50);
 			}
 			else if (mapo->map[i][j] == 'E')
 				mlx_put_image_to_window(data->mlx.mlx, data->mlx.win,
@@ -406,23 +444,21 @@ int	draw_map(t_data *data)
 	void		*win;
 	t_img		img;
 	t_map		*mapo;
-	t_assets	*images;
 
 	img = data->img;
 	mlx = data->mlx.mlx;
 	win = data->mlx.win;
 	if (img.img == NULL)
 		print_exit("problem in img\n", 1);
-	images = set_images(data);
+	set_images(data);
 	mapo = data->mapo;
 	mapo->cc = 0;
-	if (set_mapo(mapo) == 1)
-		print_exit("bad map\n", 1);
+	set_mapo(mapo);
 	verify_borders(mapo);
 	data->img.img = mlx_new_image(data->mlx.mlx, 500, 500);
 	data->img.addr = mlx_get_data_addr(data->img.img, &data->img.bits_per_pixel,
 			&data->img.line_length, &data->img.endian);
-	draw_map_images(mapo, data, images);
+	draw_map_images(mapo, data, data->imgs);
 	return (0);
 }
 char	**load_map(int fd, int line_count)
@@ -432,17 +468,23 @@ char	**load_map(int fd, int line_count)
 	char	*line;
 
 	map = malloc((line_count + 1) * sizeof(char *));
+	if (map == NULL)
+		print_exit("problem loading the map\n", 1);
 	line = get_next_line(fd);
 	line_count = 0;
 	while (line)
 	{
 		line_len = ft_strlen_till(line, '\n');
 		map[line_count] = ft_strdup_len_nonl(line, line_len);
+		free(line);
+		if (map[line_count] == NULL)
+			free_map_and_exit(map, line_count);
 		line_count++;
 		line = get_next_line(fd);
 	}
 	line_len = ft_strlen(line);
 	map[line_count] = ft_strdup_len_nonl(line, line_len);
+	free(line);
 	return (map);
 }
 char	**read_map(char *path)
@@ -460,8 +502,10 @@ char	**read_map(char *path)
 	while (line)
 	{
 		line_count++;
+		free(line);
 		line = get_next_line(fd);
 	}
+	free(line);
 	close(fd);
 	fd = open(path, O_RDONLY);
 	if (fd <= 0)
@@ -503,8 +547,7 @@ void	verify(t_map *mapo)
 	char	**map_copy;
 	int		r;
 
-	if (set_mapo(mapo) == 1)
-		print_exit("bad map\n", 1);
+	set_mapo(mapo);
 	verify_borders(mapo);
 	map_copy = copy_map(mapo->map, mapo->w, mapo->h);
 	r = verify_exit(map_copy, mapo->w, mapo->h, mapo->py, mapo->px);
@@ -512,11 +555,12 @@ void	verify(t_map *mapo)
 		print_exit("shitty ass map\n", 1);
 }
 
-void render()
+void set_up_data_struct(t_data *data, t_img img, t_mlx mlx, t_map *mapo)
 {
-	
+	data->img = img;
+	data->mlx = mlx;
+	data->mapo = mapo;
 }
-
 int	main(int ac, char *av[])
 {
 	// choof tv get images from there
@@ -528,19 +572,19 @@ int	main(int ac, char *av[])
 
 	verify_map_name(ac, av);
 	map = read_map(av[1]);
+
 	mapo = malloc(sizeof(t_map));
+	data.imgs = malloc(sizeof(t_assets));
 	mapo->map = map;
 	mlx.mlx = mlx_init();
 	mlx.win = mlx_new_window(mlx.mlx, WINDOW_WIDTH, WINDOW_HEIGHT, ":v");
 	img.img = mlx_new_image(mlx.mlx, 1920, 1080);
 	img.addr = mlx_get_data_addr(img.img, &img.bits_per_pixel, &img.line_length,
 			&img.endian);
-	data.img = img;
-	data.mlx = mlx;
-	data.player = malloc(sizeof(t_player));
-	data.mapo = mapo;
+	set_up_data_struct(&data, img, mlx, mapo);
 	verify(mapo);
 	mlx_key_hook(mlx.win, handle_input, &data);
 	mlx_loop_hook(mlx.mlx, draw_map, &data);
 	mlx_loop(mlx.mlx);
+	system("leaks a.out");
 }
