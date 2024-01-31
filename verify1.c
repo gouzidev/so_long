@@ -12,13 +12,15 @@ void	verify(t_data *data)
 	verify_borders(mapo);
 	map_copy = copy_map(mapo->map, mapo->w, mapo->h);
 	r = verify_exit(map_copy, mapo->w, mapo->h, mapo->py, mapo->px);
-	if (r == 1)
+	if (r == 1 || map_copy == NULL)
 	{
-		free_map_exit(map_copy, mapo->h, 0);
+		free_map_exit(map_copy, 0);
+		free_map_exit(mapo->map, 0);
 		free_imgs_exit(data->imgs, 0);
 		print_exit("shitty ass map\n", 1);
 	}
-	free_map_exit(map_copy, mapo->h, 0);
+	
+	free_map_exit(map_copy, 0);
 }
 
 

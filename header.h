@@ -27,6 +27,13 @@
 #  define BUFFER_SIZE 1337
 # endif
 
+# ifndef WINDOW_WIDTH
+# define WINDOW_WIDTH 1000
+# endif
+
+# ifndef WINDOW_HEIGHT
+# define WINDOW_HEIGHT 1000
+# endif
 
 typedef struct s_mlx
 {
@@ -74,8 +81,6 @@ typedef struct s_data
 	t_assets	*imgs;
 }				t_data;
 
-
-
 char	*get_next_line(int fd);
 int		we_have_a_problem(int fd, char **str);
 char	*ft_strchr(char *s, int c);
@@ -86,10 +91,10 @@ char	*get_rest(char *left_str);
 size_t	ft_strlen_till(char *s, char c);
 
 
-
 void free_imgs_exit(t_assets *images, int should_exit);
 void free_mapo_and_exit(t_map *mapo);
-void free_map_exit(char **map, int stop, int should_exist);
+void free_map_exit(char **map, int should_exist);
+void ft_free(void *ptr);
 
 void	move_vertical(t_data *data, t_map *mapo, int direction);
 void	move_horizontal(t_data *data, t_map *mapo, int direction);
@@ -99,7 +104,6 @@ void	move_player(t_data *data, t_map *mapo, int direction);
 void	verify(t_data *data);
 void	verify_borders(t_map *mapo);
 int	verify_exit(char **map, int w, int h, int py, int px);
-
 
 
 void set_images(t_data *data);
@@ -115,9 +119,11 @@ int	ft_istrlen(const char *s);
 int	ft_sub_strlen(char *s, char c);
 char	*ft_strdup_len_nonl(const char *s1, int len);
 
+
 char	**load_map(int fd, int line_count);
 char	**read_map(char *path);
 char	**copy_map(char **map, int w, int h);
+
 
 void	draw_map_images(t_map *mapo, t_data *data, t_assets *images);
 int	draw_map(t_data *data);

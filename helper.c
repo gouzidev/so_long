@@ -3,25 +3,23 @@ void set_images(t_data *data)
 {
 	int			img_w;
 	int			img_h;
-	t_assets	*images;
 
-	images = malloc(sizeof(t_assets));
-	images->wall_img = mlx_xpm_file_to_image(data->mlx.mlx, "./assets/wall.xpm", &img_w, &img_h);
-	if (images->wall_img == NULL)
-		free_imgs_exit(images, 1);
-	images->floor_img = mlx_xpm_file_to_image(data->mlx.mlx, "./assets/floor.xpm", &img_w, &img_h);
-	if (images->floor_img == NULL)
-		free_imgs_exit(images, 1);
-	images->exit_img = mlx_xpm_file_to_image(data->mlx.mlx, "./assets/exit.xpm", &img_w, &img_h);
-	if (images->exit_img == NULL)
-		free_imgs_exit(images, 1);
-	images->player_img = mlx_xpm_file_to_image(data->mlx.mlx, "./assets/p1.xpm", &img_w, &img_h);
-	if (images->player_img == NULL)
-		free_imgs_exit(images, 1);
-	images->coin_img = mlx_xpm_file_to_image(data->mlx.mlx, "./assets/coin.xpm", &img_w, &img_h);
-	if (images->coin_img == NULL)
-		free_imgs_exit(images, 1);
-	data->imgs = images;
+	data->imgs = malloc(sizeof(t_assets));
+	data->imgs->wall_img = mlx_xpm_file_to_image(data->mlx.mlx, "./assets/wall.xpm", &img_w, &img_h);
+	if (data->imgs->wall_img == NULL)
+		free_imgs_exit(data->imgs, 1);
+	data->imgs->floor_img = mlx_xpm_file_to_image(data->mlx.mlx, "./assets/floor.xpm", &img_w, &img_h);
+	if (data->imgs->floor_img == NULL)
+		free_imgs_exit(data->imgs, 1);
+	data->imgs->exit_img = mlx_xpm_file_to_image(data->mlx.mlx, "./assets/exit.xpm", &img_w, &img_h);
+	if (data->imgs->exit_img == NULL)
+		free_imgs_exit(data->imgs, 1);
+	data->imgs->player_img = mlx_xpm_file_to_image(data->mlx.mlx, "./assets/p1.xpm", &img_w, &img_h);
+	if (data->imgs->player_img == NULL)
+		free_imgs_exit(data->imgs, 1);
+	data->imgs->coin_img = mlx_xpm_file_to_image(data->mlx.mlx, "./assets/coin.xpm", &img_w, &img_h);
+	if (data->imgs->coin_img == NULL)
+		free_imgs_exit(data->imgs, 1);
 }
 int	print_exit(char *msg, int exit_msg)
 {

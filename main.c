@@ -1,7 +1,6 @@
 #include "header.h"
 
-#define WINDOW_WIDTH 1000
-#define WINDOW_HEIGHT 1000
+
 int **make_cc_arr(char **map, int w, int h, int cc)
 {
     int i;
@@ -72,8 +71,6 @@ int verify_cc(char **map, int w, int h, int py, int px)
     }
     return r;
 }
-
-
 void	print_map(t_map mapo)
 {
 	int		i;
@@ -99,8 +96,6 @@ void	print_map(t_map mapo)
 		i++;
 	}
 }
-
-
 int	handle_input(int keysym, t_data *data)
 {
 	t_map	*mapo;
@@ -110,7 +105,10 @@ int	handle_input(int keysym, t_data *data)
 	if (keysym == 53)
 	{
 		mlx_destroy_window(data->mlx.mlx, data->mlx.win);
-		free_imgs_exit(data->imgs, 1);
+		free_map_exit(mapo->map, 0);
+		ft_free(mapo);
+		system("leaks a.out");
+		exit(1);
 	}
 	if (keysym == 13) // w
 		move_player(data, mapo, 0);
@@ -124,9 +122,6 @@ int	handle_input(int keysym, t_data *data)
 		mapo->map[mapo->py][mapo->px] = 'P';
 	return (0);
 }
-
-
-
 int	main(int ac, char *av[])
 {
 	// choof tv get images from there
@@ -140,7 +135,6 @@ int	main(int ac, char *av[])
 	map = read_map(av[1]);
 
 	mapo = malloc(sizeof(t_map));
-	data.imgs = malloc(sizeof(t_assets));
 	mapo->map = map;
 	mlx.mlx = mlx_init();
 	mlx.win = mlx_new_window(mlx.mlx, WINDOW_WIDTH, WINDOW_HEIGHT, ":v");

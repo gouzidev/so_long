@@ -15,9 +15,10 @@ char	**load_map(int fd, int line_count)
 	{
 		line_len = ft_strlen_till(line, '\n');
 		map[line_count] = ft_strdup_len_nonl(line, line_len);
+		printf("line got is -> %s\n", line);
 		free(line);
 		if (map[line_count] == NULL)
-			free_map_exit(map, line_count, 1);
+			free_map_exit(map, 1);
 		line_count++;
 		line = get_next_line(fd);
 	}
@@ -60,9 +61,13 @@ char	**copy_map(char **map, int w, int h)
 
 	i = 0;
 	new_map = malloc((h + 1) * sizeof(char *));
+	if (new_map == NULL)
+		return (NULL);
 	while (map[i])
 	{
 		new_map[i] = ft_strdup_len_nonl(map[i], w);
+		if (new_map[i] == NULL)
+			free_map_exit(new_map, 0);
 		i++;
 	}
 	new_map[i] = NULL;

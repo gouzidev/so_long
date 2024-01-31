@@ -1,16 +1,25 @@
 #include "header.h"
 
-void free_map_exit(char **map, int stop, int should_exist)
+void ft_free(void *ptr)
+{
+	if (ptr != NULL)
+	{
+		free(ptr);
+		ptr = NULL;
+	}
+}
+void free_map_exit(char **map, int should_exist)
 {
 	int i;
 
 	i = 0;
-	while (i < stop)
+	while (map[i])
 	{
+		printf("freeing   %s\n", map[i]);
 		free(map[i]);
 		i++;
 	}
-	free(map[i]);
+	free(map);
 	if (should_exist == 1)
 		exit(1);
 }

@@ -54,9 +54,12 @@ void	move_horizontal(t_data *data, t_map *mapo, int direction)
 			{
 				if (mapo->cc == 0)
 				{
-					free_map_exit(mapo->map, mapo->h, 0);
 					mlx_destroy_window(data->mlx.mlx, data->mlx.win);
+					free_map_exit(mapo->map, 0);
+					free(data->imgs);
+					printf("nooo\n");
 					system("leaks a.out");
+					printf("hii\n");
 					exit(1);
 				}
 			}
@@ -76,8 +79,10 @@ void	move_horizontal(t_data *data, t_map *mapo, int direction)
 				if (mapo->cc == 0)
 				{
 					mlx_destroy_window(data->mlx.mlx, data->mlx.win);
-					free_map_exit(mapo->map, mapo->h, 0);
+					free_map_exit(mapo->map, 0);
+					printf("nooo\n");
 					system("leaks a.out");
+					printf("hii\n");
 					exit(1);
 				}
 			}
