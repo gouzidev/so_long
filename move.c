@@ -12,10 +12,7 @@ void	move_vertical(t_data *data, t_map *mapo, int direction)
 			if (mapo->map[mapo->py - 1][mapo->px] == 'E')
 			{
 				if (mapo->cc == 0)
-				{
-					mlx_destroy_window(data->mlx.mlx, data->mlx.win);
-					exit(1);
-				}
+					close_window(data);
 			}
 			else
 				mapo->py -= 1;
@@ -31,10 +28,7 @@ void	move_vertical(t_data *data, t_map *mapo, int direction)
 			if (mapo->map[mapo->py + 1][mapo->px] == 'E')
 			{
 				if (mapo->cc == 0)
-				{
-					mlx_destroy_window(data->mlx.mlx, data->mlx.win);
-					exit(1);
-				}
+					close_window(data);
 			}
 			else
 				mapo->py += 1;
@@ -53,15 +47,7 @@ void	move_horizontal(t_data *data, t_map *mapo, int direction)
 			if (mapo->map[mapo->py][mapo->px + 1] == 'E')
 			{
 				if (mapo->cc == 0)
-				{
-					mlx_destroy_window(data->mlx.mlx, data->mlx.win);
-					free_map_exit(mapo->map, 0);
-					free(data->imgs);
-					printf("nooo\n");
-					system("leaks a.out");
-					printf("hii\n");
-					exit(1);
-				}
+					close_window(data);
 			}
 			else
 				mapo->px += 1;
@@ -77,14 +63,7 @@ void	move_horizontal(t_data *data, t_map *mapo, int direction)
 			if (mapo->map[mapo->py][mapo->px - 1] == 'E')
 			{
 				if (mapo->cc == 0)
-				{
-					mlx_destroy_window(data->mlx.mlx, data->mlx.win);
-					free_map_exit(mapo->map, 0);
-					printf("nooo\n");
-					system("leaks a.out");
-					printf("hii\n");
-					exit(1);
-				}
+					close_window(data);
 			}
 			else
 				mapo->px -= 1;

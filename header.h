@@ -124,8 +124,9 @@ char	**load_map(int fd, int line_count);
 char	**read_map(char *path);
 char	**copy_map(char **map, int w, int h);
 
-
+void	print_map(t_map *mapo);
 void	draw_map_images(t_map *mapo, t_data *data, t_assets *images);
 int	draw_map(t_data *data);
+void close_window(t_data *data);
 
 #endif
