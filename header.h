@@ -17,11 +17,13 @@
 #include "header.h"
 #include <stdlib.h>
 #include <fcntl.h>
-#include <mlx.h>
+#include "./minilibx_copy/mlx.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "./minilibx_copy/mlx.h"
+#include <X11/keysym.h>
 
 # ifndef BUFFER_SIZE
 #  define BUFFER_SIZE 1337
@@ -128,5 +130,9 @@ void	print_map(t_map *mapo);
 void	draw_map_images(t_map *mapo, t_data *data, t_assets *images);
 int	draw_map(t_data *data);
 void close_window(t_data *data);
+
+
+int **make_cc_arr(char **map, int w, int h, int cc);
+int verify_cc(char **map, int w, int h, int py, int px);
 
 #endif
