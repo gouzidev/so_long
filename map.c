@@ -15,7 +15,6 @@ char	**load_map(int fd, int line_count)
 	{
 		line_len = ft_strlen_till(line, '\n');
 		map[line_count] = ft_strdup_len_nonl(line, line_len);
-		printf("line got is -> %s\n", line);
 		free(line);
 		if (map[line_count] == NULL)
 			free_map_exit(map, 1);

@@ -96,11 +96,13 @@ size_t	ft_strlen_till(char *s, char c);
 void free_imgs_exit(t_assets *images, int should_exit);
 void free_mapo_and_exit(t_map *mapo);
 void free_map_exit(char **map, int should_exist);
+void free_cc_arr(int **cc_arr);
 void ft_free(void *ptr);
 
-void	move_vertical(t_data *data, t_map *mapo, int direction);
-void	move_horizontal(t_data *data, t_map *mapo, int direction);
-void	move_player(t_data *data, t_map *mapo, int direction);
+void move_up(t_data *data, t_map *mapo);
+void move_down(t_data *data, t_map *mapo);
+void move_left(t_data *data, t_map *mapo);
+void move_right(t_data *data, t_map *mapo);
 
 
 void	verify(t_data *data);
@@ -128,11 +130,11 @@ char	**copy_map(char **map, int w, int h);
 
 void	print_map(t_map *mapo);
 void	draw_map_images(t_map *mapo, t_data *data, t_assets *images);
-int	draw_map(t_data *data);
-void close_window(t_data *data);
+int draw(t_data *data);
+void close_window(t_data *data, char *msg);
 
 
 int **make_cc_arr(char **map, int w, int h, int cc);
-int verify_cc(char **map, int w, int h, int py, int px);
+int verify_cc(int **cc_arr, char **map, int w, int h, int py, int px, int cc);
 
 #endif

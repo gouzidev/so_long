@@ -17,13 +17,29 @@ void verify_exit_count(t_data *data)
 			if (data->mapo->map[i][j] == 'E')
 			{
 				if (++exit_count > 1)
-					close_window(data);
+					close_window(data, "more than one door !");
 			}
 			j++;
 		}
 		i++;
 	}
 }
+
+int check_cc(int **cc_arr)
+{
+	int i;
+
+	i = 0;
+	while (cc_arr[i])
+	{
+		printf("  ->  [%d][%d] => %d\n", cc_arr[i][0], cc_arr[i][1], cc_arr[i][2]);
+		if (cc_arr[i][2] == 0)
+			return 1;
+		i++;
+	}
+	return 0;
+}
+
 
 void	verify(t_data *data)
 {
@@ -36,16 +52,22 @@ void	verify(t_data *data)
 	verify_exit_count(data);
 	map_copy = copy_map(mapo->map, mapo->w, mapo->h);
 	if (map_copy == NULL)
-		close_window(data);
+		close_window(data, "cant malloc map copy");
 	r = verify_exit(map_copy, mapo->w, mapo->h, mapo->py, mapo->px);
 	if (r == 1)
-		close_window(data);
+		close_window(data, "no exit");
 	free_map_exit(map_copy, 0);
 	cc_arr = make_cc_arr(mapo->map, mapo->w, mapo->h, mapo->cc);
+
 	map_copy = copy_map(mapo->map, mapo->w, mapo->h);
-	r = verify_cc(map_copy, mapo->w, mapo->h, mapo->py, mapo->py);
+	r = verify_cc(cc_arr, map_copy, mapo->w, mapo->h, mapo->py, mapo->py, mapo->cc);
+	check_cc(cc_arr);
+
+	free_cc_arr(cc_arr);
+	free_map_exit(map_copy, 0);
+
 	if (r == 1)
-		close_window(data);
+		close_window(data, "cant find all collectables");
 }
 int **make_cc_arr(char **map, int w, int h, int cc)
 {
@@ -80,43 +102,50 @@ int **make_cc_arr(char **map, int w, int h, int cc)
     
     return arr;
 }
-int verify_cc(char **map, int w, int h, int py, int px)
+int verify_cc(int **cc_arr, char **map, int w, int h, int py, int px, int cc)
 {
     int r = 1;
-    if (map[py][px] == 'E')
+	if (check_cc(cc_arr) == 1)
+		return 0;
+    if (map[py][px] == 'C' && cc-- > 0)
+		cc_arr[--cc][2] = 1;
+
+    if (cc == 0)
         return 0;
     if (map[py][px] == 'x')
         return 1;
     if (py - 1 >= 1 && map[py - 1][px] != '1' && map[py - 1][px] != 'x')
     {
         map[py][px] = 'x';
-        r = verify_exit(map, w, h, py - 1, px);
+        r = verify_cc(cc_arr, map, w, h, py - 1, px, cc);
         if (r == 0)
             return r;
     }
     if (px + 1 < w - 1 && map[py][px + 1] != '1' && map[py][px + 1] != 'x')
     {
         map[py][px] = 'x';
-        r = verify_exit(map, w, h, py, px + 1);
+        r = verify_cc(cc_arr, map, w, h, py, px + 1, cc);
         if (r == 0)
             return r;
     }
     if (px - 1 >= 1 && map[py][px - 1] != '1' && map[py][px - 1] != 'x')
     {
         map[py][px] = 'x';
-        r = verify_exit(map, w, h, py, px - 1);
+        r = verify_cc(cc_arr, map, w, h, py, px - 1, cc);
         if (r == 0)
             return r;
     }
     if (py + 1 < h - 1 && map[py + 1][px] != '1' && map[py + 1][px] != 'x')
     {
         map[py][px] = 'x';
-        r = verify_exit(map, w, h, py + 1, px);
+        r = verify_cc(cc_arr, map, w, h, py + 1, px, cc);
         if (r == 0)
             return r;
     }
     return r;
 }
+
+
 void	verify_borders(t_map *mapo)
 {
 	int		i;

@@ -36,3 +36,15 @@ void free_imgs_exit(t_assets *images, int should_exit)
 	if (should_exit)
 		exit(1);
 }
+void free_cc_arr(int **cc_arr)
+{
+	int i;
+
+	i = 0;
+	while (cc_arr[i])
+	{
+		free(cc_arr[i]);
+		i++;
+	}
+	free(cc_arr);
+}

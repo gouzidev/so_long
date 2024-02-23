@@ -26,14 +26,14 @@ void	print_map(t_map *mapo)
 		i++;
 	}
 }
-
-void close_window(t_data *data)
+void close_window(t_data *data, char *msg)
 {
     t_map *mapo;
 
     mapo = data->mapo;
     mlx_destroy_window(data->mlx.mlx, data->mlx.win);
     free_map_exit(mapo->map, 0);
+    printf("%s\n", msg);
     ft_free(mapo);
     exit(1);
 }
@@ -42,57 +42,21 @@ int	 handle_input(int keysym, t_data *data)
 	t_map	*mapo;
 	mapo = data->mapo;
 	if (keysym == XK_Escape)
-        close_window(data);
+        close_window(data, "clicked on esc key");
 	if (keysym == XK_Up) // w
-		move_player(data, mapo, 0);
+		move_up(data, mapo);
 	if (keysym == XK_Down)
-		move_player(data, mapo, 2);
+		move_down(data, mapo);
 	if (keysym == XK_Right) // d
-		move_player(data, mapo, 1);
+		move_right(data, mapo);
 	if (keysym == XK_Left) // a
-		move_player(data, mapo, 3);
+		move_left(data, mapo);
 	if (mapo->map[mapo->py][mapo->px] != 'E')
 		mapo->map[mapo->py][mapo->px] = 'P';
 	return (0);
 }
-void	draw_map_images(t_map *mapo, t_data *data, t_assets *images)
-{
-	int	i;
-	int	j;
-	i = -1;
-	while (++i < mapo->h)
-	{
-		j = -1;
-		while (++j < mapo->w)
-		{
-			if (mapo->map[i][j] == '1')
-				mlx_put_image_to_window(data->mlx.mlx, data->mlx.win,
-					images->wall_img, j * 50, i * 50);
-			else if (mapo->map[i][j] == '0')
-				mlx_put_image_to_window(data->mlx.mlx, data->mlx.win,
-					images->floor_img, j * 50, i * 50);
-			else if (mapo->map[i][j] == 'P')
-			{
-				set_px_py(mapo, i, j);
-				mlx_put_image_to_window(data->mlx.mlx, data->mlx.win,
-					images->player_img, j * 50, i * 50);
-			}
-			else if (mapo->map[i][j] == 'E')
-				mlx_put_image_to_window(data->mlx.mlx, data->mlx.win,
-					images->exit_img, j * 50, i * 50);
-			else if (mapo->map[i][j] == 'C')
-				mlx_put_image_to_window(data->mlx.mlx, data->mlx.win,
-					images->coin_img, j * 50, i * 50);
-			else
-				print_exit("bad map (invalid character)\n", 1);
-		}
-	}
-}
-int draw(t_data *data)
-{
-    draw_map_images(data->mapo, data, data->imgs);
-    return (0);
-}
+
+
 int	main(int ac, char *av[])
 {
 	t_data data;
