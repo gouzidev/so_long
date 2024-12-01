@@ -1,35 +1,18 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   free.c                                             :+:      :+:    :+:   */
+/*   mlx_destroy_display.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sgouzi <sgouzi@student.42.fr>              +#+  +:+       +#+        */
+/*   By: mg <mg@student.42.fr>                      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/03/03 01:34:12 by sgouzi            #+#    #+#             */
-/*   Updated: 2024/03/06 20:58:58 by sgouzi           ###   ########.fr       */
+/*   Created: 2020/10/03 18:56:35 by mg                #+#    #+#             */
+/*   Updated: 2020/10/04 01:55:35 by mg               ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "header.h"
+#include "mlx_int.h"
 
-void	ft_free(void *ptr)
+int	mlx_destroy_display(t_xvar *xvar)
 {
-	if (ptr != NULL)
-	{
-		free(ptr);
-		ptr = NULL;
-	}
-}
-
-void	free_map(char **map)
-{
-	int	i;
-
-	i = 0;
-	while (map[i])
-	{
-		ft_free(map[i]);
-		i++;
-	}
-	ft_free(map);
+	XCloseDisplay(xvar->display);
 }

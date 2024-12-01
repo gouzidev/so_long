@@ -1,76 +1,104 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sgouzi <sgouzi@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/03/03 01:34:32 by sgouzi            #+#    #+#             */
+/*   Updated: 2024/03/06 20:57:03 by sgouzi           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "header.h"
 
-
-void	print_map(t_map *mapo)
+void	*malloc_or_print_exit(size_t size, char *msg)
 {
-	int		i;
-	int		j;
-	char	**map;
+	void	*ptr;
 
-	i = 0;
-	j = 0;
-	map = mapo->map;
-	while (map[0][i++])
-		write(1, "*", 1);
-	write(1, "\n", 1);
-	i = 0;
-	while (map[i] != NULL)
-	{
-		j = 0;
-		while (j < ft_strlen(map[i]))
-		{
-			write(1, &map[i][j], 1);
-			j++;
-		}
-		write(1, "\n", 1);
-		i++;
-	}
+	ptr = malloc(size);
+	if (ptr == NULL)
+		print_exit(msg, 1);
+	return (ptr);
 }
-void close_window(t_data *data, char *msg)
-{
-    t_map *mapo;
 
-    mapo = data->mapo;
-    mlx_destroy_window(data->mlx.mlx, data->mlx.win);
-    free_map_exit(mapo->map, 0);
-    printf("%s\n", msg);
-    ft_free(mapo);
-    exit(1);
-}
-int	 handle_input(int keysym, t_data *data)
+int	handle_input(int keysym, t_data *data)
 {
 	t_map	*mapo;
+
 	mapo = data->mapo;
 	if (keysym == XK_Escape)
-        close_window(data, "clicked on esc key");
-	if (keysym == XK_Up) // w
+		close_window_msg(data, "clicked on esc key");
+	if (keysym == XK_Up || keysym == XK_a)
 		move_up(data, mapo);
-	if (keysym == XK_Down)
+	if (keysym == XK_Down || keysym == XK_s)
 		move_down(data, mapo);
-	if (keysym == XK_Right) // d
+	if (keysym == XK_Right || keysym == XK_d)
+	{
+		data->mapo->player->pd = 0;
 		move_right(data, mapo);
-	if (keysym == XK_Left) // a
+	}
+	if (keysym == XK_a || keysym == XK_Left)
+	{
+		data->mapo->player->pd = 1;
 		move_left(data, mapo);
-	if (mapo->map[mapo->py][mapo->px] != 'E')
-		mapo->map[mapo->py][mapo->px] = 'P';
+	}
+	if (mapo->map[mapo->player->py][mapo->player->px] != 'E')
+		mapo->map[mapo->player->py][mapo->player->px] = 'P';
 	return (0);
 }
 
+void	init_null(t_data *data)
+{
+	data->mapo->player = NULL;
+	data->mapo->map = NULL;
+	data->mapo->enemy = NULL;
+}
+
+void	set_up(t_data *data, char *av[])
+{
+	data->mlx.mlx = mlx_init();
+	if (data->mlx.mlx == NULL)
+		print_exit("problem in mlx\n", 1);
+	data->mapo = malloc_or_print_exit(sizeof(t_map), "problem in malloc\n");
+	init_null(data);
+	data->mapo->map = read_map(av[1]);
+	data->mapo->enemy = malloc(sizeof(t_enemy));
+	if (data->mapo->enemy == NULL)
+		close_window_msg(data, "failed to malloc");
+	data->mapo->player = malloc(sizeof(t_player));
+	if (data->mapo->player == NULL)
+		close_window_msg(data, "failed to malloc");
+	set_mapo(data);
+	data->mapo->player->p_frame = 0;
+	data->mlx.win = mlx_new_window(data->mlx.mlx, data->mapo->w * BOX_SIZE,
+			data->mapo->h * BOX_SIZE, "sooooo long");
+	if (data->mlx.win == NULL)
+	{
+		free_map(data->mapo->map);
+		free(data->mapo);
+		print_exit("problem in making th\n", 1);
+	}
+	data->mapo->player->count = 0;
+	set_images(data);
+	verify(data);
+}
+
+int print(int keysum, t_data *data)
+{
+	ft_printf("%d\n", keysum);
+	(void) data;
+}
 
 int	main(int ac, char *av[])
 {
-	t_data data;
-	data.mlx.mlx = mlx_init();
-	data.mlx.win = mlx_new_window(data.mlx.mlx, WINDOW_WIDTH, WINDOW_HEIGHT, ":v");
-	data.mapo = malloc(sizeof(t_map));
-    data.mapo->map = read_map("./map.ber");
-    set_mapo(data.mapo);
-    set_images(&data);
-    verify(&data);
-	// choof tv get images from there
-    mlx_key_hook(data.mlx.win, handle_input, &data);
-    mlx_loop_hook(data.mlx.mlx, draw, &data);
+	t_data	data;
+
+	verify_map_name(ac, av);
+	set_up(&data, av);
+	mlx_key_hook(data.mlx.win, handle_input, &data);
+	mlx_loop_hook(data.mlx.mlx, draw, &data);
+	mlx_hook(data.mlx.win, 17, 0, close_window, &data);
 	mlx_loop(data.mlx.mlx);
-    free_imgs_exit(data.imgs, 0);
-    mlx_destroy_window(data.mlx.mlx, data.mlx.win);
+	close_window(&data);
 }
