@@ -86,7 +86,7 @@ void	move_enemy(t_data *data)
 	if (check_enemy_map(data) == 0)
 		return ;
 	h = data->mapo->h;
-	if (++i >= 40)
+	if (++i >= 200)
 	{
 		if (data->mapo->enemy->movement_direction == 1)
 		{

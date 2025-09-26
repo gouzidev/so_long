@@ -54,7 +54,7 @@ void	put_enemy_img(t_data *data, int i, int j)
 
 void	handle_player(t_data *data, int i, int j, int *p_count)
 {
-	if (*p_count >= 400)
+	if (*p_count >= 800)
 	{
 		if (data->mapo->player->p_frame == 1)
 			data->mapo->player->p_frame = 0;

@@ -4,24 +4,22 @@ SRCS = map.c main.c draw.c verify.c verify1.c flood1.c flood2.c helper1.c helper
 
 OBJS = $(SRCS:.c=.o)
 
-INCLUDES = -I/usr/include -Imlx
+INCLUDES = -I/usr/include -Iminilibx_copy
 
+CC = gcc
 
-MLX_DIR = ./mlx
-MLX_LIB = $(MLX_DIR)/libmlx_linux.a
-MLX_FLAGS = -Lmlx -lmlx -L/usr/lib/X11 -lXext -lX11
+# Use the prebuilt MiniLibX shipped in minilibx_copy
+MLX_LIB = ./minilibx_copy/libmlx_Linux.a
+# Link with X11 and extensions required by libmlx on Linux
+MLX_FLAGS = $(MLX_LIB) -lXext -lX11 -lXrender -lXfixes -lXi -lXinerama -lm -lz -lbsd
 
-all: $(MLX_LIB) $(NAME)
+all: $(NAME)
 
 .c.o:
 	$(CC) $(CFLAGS) -c -o $@ $< $(INCLUDES)
 
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) -o $(NAME) $(OBJS) $(MLX_FLAGS)
-
-$(MLX_LIB):
-	@make -C $(MLX_DIR)
-
 
 clean:
 	rm -f $(OBJS) $(ARCHIVE)

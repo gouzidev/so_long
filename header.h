@@ -26,8 +26,10 @@
 # define HEADER_H
 
 # include <fcntl.h>
-# include "../mlx/mlx.h"
-#include <X11/keysym.h>
+# include "mlx.h"
+# include <X11/X.h>
+# include <X11/Xlib.h>
+# include <X11/keysym.h>
 # include <stdarg.h>
 # include <stdlib.h>
 # include <unistd.h>

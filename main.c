@@ -29,7 +29,7 @@ int	handle_input(int keysym, t_data *data)
 	mapo = data->mapo;
 	if (keysym == XK_Escape)
 		close_window_msg(data, "clicked on esc key");
-	if (keysym == XK_Up || keysym == XK_a)
+	if (keysym == XK_Up || keysym == XK_w)
 		move_up(data, mapo);
 	if (keysym == XK_Down || keysym == XK_s)
 		move_down(data, mapo);
